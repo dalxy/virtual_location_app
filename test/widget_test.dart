@@ -11,20 +11,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:virtual_location_app/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('首页展示核心操作入口', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('虚拟定位'), findsWidgets);
+    expect(find.text('未模拟'), findsOneWidget);
+    expect(find.text('选择位置'), findsOneWidget);
+    expect(find.text('开始模拟'), findsOneWidget);
+    expect(find.text('检查模拟权限'), findsOneWidget);
   });
 }
