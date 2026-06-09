@@ -61,7 +61,7 @@ class LocationStatusCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
-                  '其他应用将读取此位置',
+                  '本应用调试将使用此位置',
                   style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ),

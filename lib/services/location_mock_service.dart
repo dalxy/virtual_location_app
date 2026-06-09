@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 
 class LocationMockService {
   static const _channel =
@@ -41,6 +42,44 @@ class LocationMockService {
     }
   }
 
+  /// Returns the active mock location if the app is currently mocking.
+  static Future<MockLocationData?> getActiveMockLocation() async {
+    try {
+      final result = await _channel.invokeMethod('getActiveMockLocation');
+      if (result == null) return null;
+      final map = Map<String, dynamic>.from(result as Map);
+      final latitude = (map['latitude'] as num?)?.toDouble();
+      final longitude = (map['longitude'] as num?)?.toDouble();
+      if (latitude == null || longitude == null) return null;
+      return MockLocationData(latitude: latitude, longitude: longitude);
+    } on MissingPluginException {
+      return null;
+    }
+  }
+
+  /// Returns the app's effective location, preferring the active mock location.
+  static Future<Position> getEffectiveCurrentPosition() async {
+    final activeMock = await getActiveMockLocation();
+    if (activeMock != null) {
+      return Position(
+        longitude: activeMock.longitude,
+        latitude: activeMock.latitude,
+        timestamp: DateTime.now(),
+        accuracy: 5,
+        altitude: 0,
+        altitudeAccuracy: 0,
+        heading: 0,
+        headingAccuracy: 0,
+        speed: 0,
+        speedAccuracy: 0,
+      );
+    }
+
+    return Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+    );
+  }
+
   /// Check the mock location permission status.
   static Future<MockPermissionStatus> checkMockPermission() async {
     try {
@@ -59,6 +98,16 @@ class LocationMockService {
       );
     }
   }
+}
+
+class MockLocationData {
+  final double latitude;
+  final double longitude;
+
+  const MockLocationData({
+    required this.latitude,
+    required this.longitude,
+  });
 }
 
 class MockPermissionStatus {

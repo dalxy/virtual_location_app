@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import '../services/location_mock_service.dart';
 
 class LocationPickerScreen extends StatefulWidget {
   final LatLng? initialLocation;
@@ -35,9 +36,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             perm = await Geolocator.requestPermission();
           }
           if (perm != LocationPermission.deniedForever) {
-            final pos = await Geolocator.getCurrentPosition(
-              locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-            );
+            final pos = await LocationMockService.getEffectiveCurrentPosition();
             _picked = LatLng(pos.latitude, pos.longitude);
           }
         }
@@ -54,11 +53,17 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   Future<dynamic> _onMethodCall(MethodCall call) async {
     switch (call.method) {
       case 'onMapClick':
-      case 'onMapMoveEnd':
         final lat = call.arguments['latitude'] as double?;
         final lng = call.arguments['longitude'] as double?;
         if (lat != null && lng != null) {
           setState(() => _picked = LatLng(lat, lng));
+        }
+        break;
+      case 'onMapMoveEnd':
+        final lat2 = call.arguments['latitude'] as double?;
+        final lng2 = call.arguments['longitude'] as double?;
+        if (lat2 != null && lng2 != null) {
+          setState(() => _picked = LatLng(lat2, lng2));
         }
         break;
       case 'onMapReady':
@@ -69,9 +74,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
 
   Future<void> _goToCurrentLocation() async {
     try {
-      final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-      );
+      final pos = await LocationMockService.getEffectiveCurrentPosition();
       final loc = LatLng(pos.latitude, pos.longitude);
       setState(() => _picked = loc);
       _channel?.invokeMethod('setCenter', {

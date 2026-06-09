@@ -18,7 +18,6 @@ class BaiduMapView(
 
     private val mapView: MapView
     private var baiduMap: BaiduMap? = null
-    private var marker: Marker? = null
 
     init {
         mapView = MapView(context)
@@ -39,17 +38,19 @@ class BaiduMapView(
             ui.isOverlookingGesturesEnabled = false
             ui.isCompassEnabled = false
 
+            // Tap → center map at tapped point
             bMap.setOnMapClickListener(object : BaiduMap.OnMapClickListener {
                 override fun onMapClick(point: LatLng) {
+                    bMap.setMapStatus(MapStatusUpdateFactory.newLatLng(point))
                     methodChannel.invokeMethod("onMapClick", mapOf(
                         "latitude" to point.latitude,
                         "longitude" to point.longitude
                     ))
                 }
-
                 override fun onMapPoiClick(poi: MapPoi?) {}
             })
 
+            // Drag → report new center
             bMap.setOnMapStatusChangeListener(object : BaiduMap.OnMapStatusChangeListener {
                 override fun onMapStatusChangeStart(status: MapStatus) {}
                 override fun onMapStatusChangeStart(status: MapStatus, reason: Int) {}
@@ -63,13 +64,11 @@ class BaiduMapView(
                 }
             })
 
-            // Apply initial position
+            // Initial position
             val lat = (creationParams?.get("latitude") as? Number)?.toDouble()
             val lng = (creationParams?.get("longitude") as? Number)?.toDouble()
             if (lat != null && lng != null) {
-                val target = LatLng(lat, lng)
-                bMap.setMapStatus(MapStatusUpdateFactory.newLatLngZoom(target, 18f))
-                addMarker(target)
+                bMap.setMapStatus(MapStatusUpdateFactory.newLatLngZoom(LatLng(lat, lng), 18f))
             }
 
             methodChannel.invokeMethod("onMapReady", null)
@@ -79,7 +78,6 @@ class BaiduMapView(
     override fun getView(): View = mapView
 
     override fun dispose() {
-        marker?.remove()
         mapView.onDestroy()
     }
 
@@ -90,33 +88,14 @@ class BaiduMapView(
                 val lat = call.argument<Double>("latitude")
                 val lng = call.argument<Double>("longitude")
                 if (lat == null || lng == null) return result.error("ARGS", "lat/lng required", null)
-                val point = LatLng(lat, lng)
-                bMap.setMapStatus(MapStatusUpdateFactory.newLatLngZoom(point, 18f))
-                addMarker(point)
+                bMap.setMapStatus(MapStatusUpdateFactory.newLatLngZoom(LatLng(lat, lng), 18f))
                 result.success(null)
             }
             "getCenter" -> {
                 val center = bMap.mapStatus.target
                 result.success(mapOf("latitude" to center.latitude, "longitude" to center.longitude))
             }
-            "setMarker" -> {
-                val lat = call.argument<Double>("latitude")
-                val lng = call.argument<Double>("longitude")
-                if (lat == null || lng == null) return result.error("ARGS", "lat/lng required", null)
-                addMarker(LatLng(lat, lng))
-                result.success(null)
-            }
             else -> result.notImplemented()
         }
-    }
-
-    private fun addMarker(point: LatLng) {
-        marker?.remove()
-        val opt = MarkerOptions()
-            .position(point)
-            .icon(BitmapDescriptorFactory.fromResource(android.R.drawable.ic_menu_mylocation))
-            .anchor(0.5f, 1.0f)
-            .zIndex(99)
-        marker = baiduMap?.addOverlay(opt) as? Marker
     }
 }

@@ -24,6 +24,7 @@ object MockLocationPlugin {
                 "startMock" -> handleStartMock(call, result)
                 "stopMock" -> handleStopMock(result)
                 "isMocking" -> handleIsMocking(result)
+                "getActiveMockLocation" -> handleGetActiveMockLocation(result)
                 "checkMockPermission" -> handleCheckMockPermission(result)
                 else -> result.notImplemented()
             }
@@ -91,6 +92,22 @@ object MockLocationPlugin {
 
     private fun handleIsMocking(result: MethodChannel.Result) {
         result.success(MockLocationService.isRunning)
+    }
+
+    private fun handleGetActiveMockLocation(result: MethodChannel.Result) {
+        val lat = MockLocationService.lastMockLat
+        val lng = MockLocationService.lastMockLng
+        if (!MockLocationService.isRunning || lat == null || lng == null) {
+            result.success(null)
+            return
+        }
+
+        result.success(
+            hashMapOf<String, Any>(
+                "latitude" to lat,
+                "longitude" to lng
+            )
+        )
     }
 
     private fun handleCheckMockPermission(result: MethodChannel.Result) {
