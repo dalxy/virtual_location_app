@@ -48,6 +48,9 @@ dependencies:
   # Persist last mocked location
   shared_preferences: ^2.3.4
 
+  # HTTP client for search API
+  http: ^1.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

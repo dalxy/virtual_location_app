@@ -297,7 +297,7 @@ class _HomePageState extends State<HomePage> {
                 : ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     itemCount: _history.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final record = _history[index];
                       final isSelected = _selectedLat != null &&
